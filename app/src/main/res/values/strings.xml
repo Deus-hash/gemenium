@@ -1,0 +1,15 @@
+<resources>
+    <string name="app_name">Gemini DNS</string>
+    <string name="vpn_active">VPN активен</string>
+    <string name="vpn_inactive">VPN выключен</string>
+    <string name="add_dns">Добавить DNS</string>
+    <string name="edit_dns">Редактировать DNS</string>
+    <string name="delete">Удалить</string>
+    <string name="save">Сохранить</string>
+    <string name="cancel">Отмена</string>
+    <string name="dns_name">Название (например, Xbox DNS)</string>
+    <string name="dns_ip">IP или Домен (например, xbox-dns.ru)</string>
+    <string name="active_server">Текущий DNS</string>
+    <string name="status_connected">Подключено к %1$s (%2$s)</string>
+    <string name="widget_title">Gemini DNS</string>
+</resources>
