@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    
+    <!-- Outer Shield Contour -->
+    <path
+        android:fillColor="#1E293B"
+        android:strokeColor="#6366F1"
+        android:strokeWidth="3.5"
+        android:strokeLineJoin="round"
+        android:pathData="M54,22 L78,32 C78,56 68,74 54,84 C40,74 30,56 30,32 Z" />
+
+    <!-- DNS / Network Orbit Ring -->
+    <path
+        android:strokeColor="#38BDF8"
+        android:strokeWidth="2.5"
+        android:fillColor="#00000000"
+        android:pathData="M37,52 A18,18 0 1,0 71,52 A18,18 0 1,0 37,52" />
+
+    <!-- Network Cross Connectors -->
+    <path
+        android:strokeColor="#38BDF8"
+        android:strokeWidth="2"
+        android:pathData="M54,34 L54,70 M36,52 L72,52" />
+
+    <!-- Glowing Network Nodes -->
+    <path
+        android:fillColor="#10B981"
+        android:pathData="M54,34m-3.5,0a3.5,3.5 0 1,0 7,0a3.5,3.5 0 1,0 -7,0" />
+    <path
+        android:fillColor="#10B981"
+        android:pathData="M54,70m-3.5,0a3.5,3.5 0 1,0 7,0a3.5,3.5 0 1,0 -7,0" />
+    <path
+        android:fillColor="#10B981"
+        android:pathData="M36,52m-3.5,0a3.5,3.5 0 1,0 7,0a3.5,3.5 0 1,0 -7,0" />
+    <path
+        android:fillColor="#10B981"
+        android:pathData="M72,52m-3.5,0a3.5,3.5 0 1,0 7,0a3.5,3.5 0 1,0 -7,0" />
+
+    <!-- Center Lightning / Switch Symbol -->
+    <path
+        android:fillColor="#FBBF24"
+        android:pathData="M55,44 L48,54 L53,54 L51,62 L59,51 L54,51 Z" />
+</vector>

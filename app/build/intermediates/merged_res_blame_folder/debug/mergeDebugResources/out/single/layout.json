@@ -1,0 +1,22 @@
+[
+    {
+        "merged": "C:\\Users\\Deus\\.gradle\\daemon\\8.13\\com.gemini.dnsswitcher.app-mergeDebugResources-35:\\layout\\item_dns.xml",
+        "source": "C:\\Users\\Deus\\.gradle\\daemon\\8.13\\com.gemini.dnsswitcher.app-main-38:\\layout\\item_dns.xml"
+    },
+    {
+        "merged": "C:\\Users\\Deus\\.gradle\\daemon\\8.13\\com.gemini.dnsswitcher.app-mergeDebugResources-35:\\layout\\widget_dns.xml",
+        "source": "C:\\Users\\Deus\\.gradle\\daemon\\8.13\\com.gemini.dnsswitcher.app-main-38:\\layout\\widget_dns.xml"
+    },
+    {
+        "merged": "C:\\Users\\Deus\\.gradle\\daemon\\8.13\\com.gemini.dnsswitcher.app-mergeDebugResources-35:\\layout\\activity_main.xml",
+        "source": "C:\\Users\\Deus\\.gradle\\daemon\\8.13\\com.gemini.dnsswitcher.app-main-38:\\layout\\activity_main.xml"
+    },
+    {
+        "merged": "C:\\Users\\Deus\\.gradle\\daemon\\8.13\\com.gemini.dnsswitcher.app-mergeDebugResources-35:\\layout\\dialog_edit_dns.xml",
+        "source": "C:\\Users\\Deus\\.gradle\\daemon\\8.13\\com.gemini.dnsswitcher.app-main-38:\\layout\\dialog_edit_dns.xml"
+    },
+    {
+        "merged": "com.gemini.dnsswitcher.app-mergeDebugResources-35:/layout/item_dns.xml",
+        "source": "com.gemini.dnsswitcher.app-main-38:/layout/item_dns.xml"
+    }
+]

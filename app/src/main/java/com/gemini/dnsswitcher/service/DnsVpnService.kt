@@ -128,14 +128,6 @@ class DnsVpnService : VpnService() {
 
         scope.launch {
             dnsList = repository.dnsList.value
-            if (dnsList.isEmpty()) {
-                dnsList = listOf(
-                    DnsServer("1", "Xbox DNS RU", "xbox-dns.ru"),
-                    DnsServer("2", "Comss.one DNS", "dns.comss.one"),
-                    DnsServer("3", "Cloudflare DNS", "1.1.1.1"),
-                    DnsServer("4", "Google Public DNS", "8.8.8.8")
-                )
-            }
             val selectedId = repository.getSelectedDnsId()
             val foundIndex = dnsList.indexOfFirst { it.id == selectedId }
             currentDnsIndex = if (foundIndex >= 0) foundIndex else 0

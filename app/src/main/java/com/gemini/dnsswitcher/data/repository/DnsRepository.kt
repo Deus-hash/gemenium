@@ -30,16 +30,7 @@ class DnsRepository private constructor(context: Context) {
         val jsonString = prefs.getString(KEY_DNS_LIST, null)
         val list = mutableListOf<DnsServer>()
 
-        if (jsonString.isNullOrEmpty()) {
-            val defaults = listOf(
-                DnsServer(UUID.randomUUID().toString(), "Xbox DNS RU", "xbox-dns.ru"),
-                DnsServer(UUID.randomUUID().toString(), "Comss.one DNS", "dns.comss.one"),
-                DnsServer(UUID.randomUUID().toString(), "Cloudflare DNS", "1.1.1.1"),
-                DnsServer(UUID.randomUUID().toString(), "Google Public DNS", "8.8.8.8")
-            )
-            list.addAll(defaults)
-            saveListInternal(defaults)
-        } else {
+        if (!jsonString.isNullOrEmpty()) {
             val array = JSONArray(jsonString)
             for (i in 0 until array.length()) {
                 val obj = array.getJSONObject(i)

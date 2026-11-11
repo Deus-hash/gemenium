@@ -1,0 +1,190 @@
+1<?xml version="1.0" encoding="utf-8"?>
+2<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+3    package="com.gemini.dnsswitcher"
+4    android:versionCode="1"
+5    android:versionName="1.0" >
+6
+7    <uses-sdk
+8        android:minSdkVersion="26"
+9        android:targetSdkVersion="35" />
+10
+11    <uses-permission android:name="android.permission.INTERNET" />
+11-->C:\Users\Deus\Desktop\geminiun\app\src\main\AndroidManifest.xml:5:5-67
+11-->C:\Users\Deus\Desktop\geminiun\app\src\main\AndroidManifest.xml:5:22-64
+12    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+12-->C:\Users\Deus\Desktop\geminiun\app\src\main\AndroidManifest.xml:6:5-79
+12-->C:\Users\Deus\Desktop\geminiun\app\src\main\AndroidManifest.xml:6:22-76
+13    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+13-->C:\Users\Deus\Desktop\geminiun\app\src\main\AndroidManifest.xml:7:5-77
+13-->C:\Users\Deus\Desktop\geminiun\app\src\main\AndroidManifest.xml:7:22-74
+14    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
+14-->C:\Users\Deus\Desktop\geminiun\app\src\main\AndroidManifest.xml:8:5-89
+14-->C:\Users\Deus\Desktop\geminiun\app\src\main\AndroidManifest.xml:8:22-86
+15    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+15-->C:\Users\Deus\Desktop\geminiun\app\src\main\AndroidManifest.xml:9:5-77
+15-->C:\Users\Deus\Desktop\geminiun\app\src\main\AndroidManifest.xml:9:22-74
+16
+17    <permission
+17-->[androidx.core:core:1.13.1] C:\Users\Deus\.gradle\caches\8.13\transforms\5afcd05136b87bff44fd174d5561c922\transformed\core-1.13.1\AndroidManifest.xml:22:5-24:47
+18        android:name="com.gemini.dnsswitcher.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION"
+18-->[androidx.core:core:1.13.1] C:\Users\Deus\.gradle\caches\8.13\transforms\5afcd05136b87bff44fd174d5561c922\transformed\core-1.13.1\AndroidManifest.xml:23:9-81
+19        android:protectionLevel="signature" />
+19-->[androidx.core:core:1.13.1] C:\Users\Deus\.gradle\caches\8.13\transforms\5afcd05136b87bff44fd174d5561c922\transformed\core-1.13.1\AndroidManifest.xml:24:9-44
+20
+21    <uses-permission android:name="com.gemini.dnsswitcher.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION" />
+21-->[androidx.core:core:1.13.1] C:\Users\Deus\.gradle\caches\8.13\transforms\5afcd05136b87bff44fd174d5561c922\transformed\core-1.13.1\AndroidManifest.xml:26:5-97
+21-->[androidx.core:core:1.13.1] C:\Users\Deus\.gradle\caches\8.13\transforms\5afcd05136b87bff44fd174d5561c922\transformed\core-1.13.1\AndroidManifest.xml:26:22-94
+22
+23    <application
+23-->C:\Users\Deus\Desktop\geminiun\app\src\main\AndroidManifest.xml:11:5-53:19
+24        android:allowBackup="true"
+24-->C:\Users\Deus\Desktop\geminiun\app\src\main\AndroidManifest.xml:12:9-35
+25        android:appComponentFactory="androidx.core.app.CoreComponentFactory"
+25-->[androidx.core:core:1.13.1] C:\Users\Deus\.gradle\caches\8.13\transforms\5afcd05136b87bff44fd174d5561c922\transformed\core-1.13.1\AndroidManifest.xml:28:18-86
+26        android:debuggable="true"
+27        android:extractNativeLibs="false"
+28        android:icon="@mipmap/ic_launcher"
+28-->C:\Users\Deus\Desktop\geminiun\app\src\main\AndroidManifest.xml:13:9-43
+29        android:label="@string/app_name"
+29-->C:\Users\Deus\Desktop\geminiun\app\src\main\AndroidManifest.xml:14:9-41
+30        android:roundIcon="@mipmap/ic_launcher_round"
+30-->C:\Users\Deus\Desktop\geminiun\app\src\main\AndroidManifest.xml:15:9-54
+31        android:supportsRtl="true"
+31-->C:\Users\Deus\Desktop\geminiun\app\src\main\AndroidManifest.xml:16:9-35
+32        android:theme="@style/Theme.GeminiDnsSwitcher" >
+32-->C:\Users\Deus\Desktop\geminiun\app\src\main\AndroidManifest.xml:17:9-55
+33        <activity
+33-->C:\Users\Deus\Desktop\geminiun\app\src\main\AndroidManifest.xml:19:9-26:20
+34            android:name="com.gemini.dnsswitcher.ui.MainActivity"
+34-->C:\Users\Deus\Desktop\geminiun\app\src\main\AndroidManifest.xml:20:13-44
+35            android:exported="true" >
+35-->C:\Users\Deus\Desktop\geminiun\app\src\main\AndroidManifest.xml:21:13-36
+36            <intent-filter>
+36-->C:\Users\Deus\Desktop\geminiun\app\src\main\AndroidManifest.xml:22:13-25:29
+37                <action android:name="android.intent.action.MAIN" />
+37-->C:\Users\Deus\Desktop\geminiun\app\src\main\AndroidManifest.xml:23:17-69
+37-->C:\Users\Deus\Desktop\geminiun\app\src\main\AndroidManifest.xml:23:25-66
+38
+39                <category android:name="android.intent.category.LAUNCHER" />
+39-->C:\Users\Deus\Desktop\geminiun\app\src\main\AndroidManifest.xml:24:17-77
+39-->C:\Users\Deus\Desktop\geminiun\app\src\main\AndroidManifest.xml:24:27-74
+40            </intent-filter>
+41        </activity>
+42
+43        <service
+43-->C:\Users\Deus\Desktop\geminiun\app\src\main\AndroidManifest.xml:28:9-39:19
+44            android:name="com.gemini.dnsswitcher.service.DnsVpnService"
+44-->C:\Users\Deus\Desktop\geminiun\app\src\main\AndroidManifest.xml:29:13-50
+45            android:exported="false"
+45-->C:\Users\Deus\Desktop\geminiun\app\src\main\AndroidManifest.xml:32:13-37
+46            android:foregroundServiceType="specialUse"
+46-->C:\Users\Deus\Desktop\geminiun\app\src\main\AndroidManifest.xml:31:13-55
+47            android:permission="android.permission.BIND_VPN_SERVICE" >
+47-->C:\Users\Deus\Desktop\geminiun\app\src\main\AndroidManifest.xml:30:13-69
+48            <intent-filter>
+48-->C:\Users\Deus\Desktop\geminiun\app\src\main\AndroidManifest.xml:33:13-35:29
+49                <action android:name="android.net.VpnService" />
+49-->C:\Users\Deus\Desktop\geminiun\app\src\main\AndroidManifest.xml:34:17-65
+49-->C:\Users\Deus\Desktop\geminiun\app\src\main\AndroidManifest.xml:34:25-62
+50            </intent-filter>
+51
+52            <property
+52-->C:\Users\Deus\Desktop\geminiun\app\src\main\AndroidManifest.xml:36:13-38:71
+53                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+53-->C:\Users\Deus\Desktop\geminiun\app\src\main\AndroidManifest.xml:37:17-76
+54                android:value="Local DNS switcher and query tunnel" />
+54-->C:\Users\Deus\Desktop\geminiun\app\src\main\AndroidManifest.xml:38:17-68
+55        </service>
+56
+57        <receiver
+57-->C:\Users\Deus\Desktop\geminiun\app\src\main\AndroidManifest.xml:41:9-51:20
+58            android:name="com.gemini.dnsswitcher.widget.DnsWidgetProvider"
+58-->C:\Users\Deus\Desktop\geminiun\app\src\main\AndroidManifest.xml:42:13-53
+59            android:exported="true" >
+59-->C:\Users\Deus\Desktop\geminiun\app\src\main\AndroidManifest.xml:43:13-36
+60            <intent-filter>
+60-->C:\Users\Deus\Desktop\geminiun\app\src\main\AndroidManifest.xml:44:13-47:29
+61                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+61-->C:\Users\Deus\Desktop\geminiun\app\src\main\AndroidManifest.xml:45:17-84
+61-->C:\Users\Deus\Desktop\geminiun\app\src\main\AndroidManifest.xml:45:25-81
+62                <action android:name="com.gemini.dnsswitcher.ACTION_TOGGLE_VPN" />
+62-->C:\Users\Deus\Desktop\geminiun\app\src\main\AndroidManifest.xml:46:17-83
+62-->C:\Users\Deus\Desktop\geminiun\app\src\main\AndroidManifest.xml:46:25-80
+63            </intent-filter>
+64
+65            <meta-data
+65-->C:\Users\Deus\Desktop\geminiun\app\src\main\AndroidManifest.xml:48:13-50:59
+66                android:name="android.appwidget.provider"
+66-->C:\Users\Deus\Desktop\geminiun\app\src\main\AndroidManifest.xml:49:17-58
+67                android:resource="@xml/dns_widget_info" />
+67-->C:\Users\Deus\Desktop\geminiun\app\src\main\AndroidManifest.xml:50:17-56
+68        </receiver>
+69
+70        <provider
+70-->[androidx.emoji2:emoji2:1.3.0] C:\Users\Deus\.gradle\caches\8.13\transforms\f7894b98d1c63dfd15964b029d120e84\transformed\emoji2-1.3.0\AndroidManifest.xml:24:9-32:20
+71            android:name="androidx.startup.InitializationProvider"
+71-->[androidx.emoji2:emoji2:1.3.0] C:\Users\Deus\.gradle\caches\8.13\transforms\f7894b98d1c63dfd15964b029d120e84\transformed\emoji2-1.3.0\AndroidManifest.xml:25:13-67
+72            android:authorities="com.gemini.dnsswitcher.androidx-startup"
+72-->[androidx.emoji2:emoji2:1.3.0] C:\Users\Deus\.gradle\caches\8.13\transforms\f7894b98d1c63dfd15964b029d120e84\transformed\emoji2-1.3.0\AndroidManifest.xml:26:13-68
+73            android:exported="false" >
+73-->[androidx.emoji2:emoji2:1.3.0] C:\Users\Deus\.gradle\caches\8.13\transforms\f7894b98d1c63dfd15964b029d120e84\transformed\emoji2-1.3.0\AndroidManifest.xml:27:13-37
+74            <meta-data
+74-->[androidx.emoji2:emoji2:1.3.0] C:\Users\Deus\.gradle\caches\8.13\transforms\f7894b98d1c63dfd15964b029d120e84\transformed\emoji2-1.3.0\AndroidManifest.xml:29:13-31:52
+75                android:name="androidx.emoji2.text.EmojiCompatInitializer"
+75-->[androidx.emoji2:emoji2:1.3.0] C:\Users\Deus\.gradle\caches\8.13\transforms\f7894b98d1c63dfd15964b029d120e84\transformed\emoji2-1.3.0\AndroidManifest.xml:30:17-75
+76                android:value="androidx.startup" />
+76-->[androidx.emoji2:emoji2:1.3.0] C:\Users\Deus\.gradle\caches\8.13\transforms\f7894b98d1c63dfd15964b029d120e84\transformed\emoji2-1.3.0\AndroidManifest.xml:31:17-49
+77            <meta-data
+77-->[androidx.lifecycle:lifecycle-process:2.8.6] C:\Users\Deus\.gradle\caches\8.13\transforms\2e8c95dc2203a7b1857e1b22b97f2697\transformed\lifecycle-process-2.8.6\AndroidManifest.xml:29:13-31:52
+78                android:name="androidx.lifecycle.ProcessLifecycleInitializer"
+78-->[androidx.lifecycle:lifecycle-process:2.8.6] C:\Users\Deus\.gradle\caches\8.13\transforms\2e8c95dc2203a7b1857e1b22b97f2697\transformed\lifecycle-process-2.8.6\AndroidManifest.xml:30:17-78
+79                android:value="androidx.startup" />
+79-->[androidx.lifecycle:lifecycle-process:2.8.6] C:\Users\Deus\.gradle\caches\8.13\transforms\2e8c95dc2203a7b1857e1b22b97f2697\transformed\lifecycle-process-2.8.6\AndroidManifest.xml:31:17-49
+80            <meta-data
+80-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\Deus\.gradle\caches\8.13\transforms\91c6e701c72cc6c9438b02635e5622b3\transformed\profileinstaller-1.3.1\AndroidManifest.xml:29:13-31:52
+81                android:name="androidx.profileinstaller.ProfileInstallerInitializer"
+81-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\Deus\.gradle\caches\8.13\transforms\91c6e701c72cc6c9438b02635e5622b3\transformed\profileinstaller-1.3.1\AndroidManifest.xml:30:17-85
+82                android:value="androidx.startup" />
+82-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\Deus\.gradle\caches\8.13\transforms\91c6e701c72cc6c9438b02635e5622b3\transformed\profileinstaller-1.3.1\AndroidManifest.xml:31:17-49
+83        </provider>
+84
+85        <receiver
+85-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\Deus\.gradle\caches\8.13\transforms\91c6e701c72cc6c9438b02635e5622b3\transformed\profileinstaller-1.3.1\AndroidManifest.xml:34:9-52:20
+86            android:name="androidx.profileinstaller.ProfileInstallReceiver"
+86-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\Deus\.gradle\caches\8.13\transforms\91c6e701c72cc6c9438b02635e5622b3\transformed\profileinstaller-1.3.1\AndroidManifest.xml:35:13-76
+87            android:directBootAware="false"
+87-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\Deus\.gradle\caches\8.13\transforms\91c6e701c72cc6c9438b02635e5622b3\transformed\profileinstaller-1.3.1\AndroidManifest.xml:36:13-44
+88            android:enabled="true"
+88-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\Deus\.gradle\caches\8.13\transforms\91c6e701c72cc6c9438b02635e5622b3\transformed\profileinstaller-1.3.1\AndroidManifest.xml:37:13-35
+89            android:exported="true"
+89-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\Deus\.gradle\caches\8.13\transforms\91c6e701c72cc6c9438b02635e5622b3\transformed\profileinstaller-1.3.1\AndroidManifest.xml:38:13-36
+90            android:permission="android.permission.DUMP" >
+90-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\Deus\.gradle\caches\8.13\transforms\91c6e701c72cc6c9438b02635e5622b3\transformed\profileinstaller-1.3.1\AndroidManifest.xml:39:13-57
+91            <intent-filter>
+91-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\Deus\.gradle\caches\8.13\transforms\91c6e701c72cc6c9438b02635e5622b3\transformed\profileinstaller-1.3.1\AndroidManifest.xml:40:13-42:29
+92                <action android:name="androidx.profileinstaller.action.INSTALL_PROFILE" />
+92-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\Deus\.gradle\caches\8.13\transforms\91c6e701c72cc6c9438b02635e5622b3\transformed\profileinstaller-1.3.1\AndroidManifest.xml:41:17-91
+92-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\Deus\.gradle\caches\8.13\transforms\91c6e701c72cc6c9438b02635e5622b3\transformed\profileinstaller-1.3.1\AndroidManifest.xml:41:25-88
+93            </intent-filter>
+94            <intent-filter>
+94-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\Deus\.gradle\caches\8.13\transforms\91c6e701c72cc6c9438b02635e5622b3\transformed\profileinstaller-1.3.1\AndroidManifest.xml:43:13-45:29
+95                <action android:name="androidx.profileinstaller.action.SKIP_FILE" />
+95-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\Deus\.gradle\caches\8.13\transforms\91c6e701c72cc6c9438b02635e5622b3\transformed\profileinstaller-1.3.1\AndroidManifest.xml:44:17-85
+95-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\Deus\.gradle\caches\8.13\transforms\91c6e701c72cc6c9438b02635e5622b3\transformed\profileinstaller-1.3.1\AndroidManifest.xml:44:25-82
+96            </intent-filter>
+97            <intent-filter>
+97-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\Deus\.gradle\caches\8.13\transforms\91c6e701c72cc6c9438b02635e5622b3\transformed\profileinstaller-1.3.1\AndroidManifest.xml:46:13-48:29
+98                <action android:name="androidx.profileinstaller.action.SAVE_PROFILE" />
+98-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\Deus\.gradle\caches\8.13\transforms\91c6e701c72cc6c9438b02635e5622b3\transformed\profileinstaller-1.3.1\AndroidManifest.xml:47:17-88
+98-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\Deus\.gradle\caches\8.13\transforms\91c6e701c72cc6c9438b02635e5622b3\transformed\profileinstaller-1.3.1\AndroidManifest.xml:47:25-85
+99            </intent-filter>
+100            <intent-filter>
+100-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\Deus\.gradle\caches\8.13\transforms\91c6e701c72cc6c9438b02635e5622b3\transformed\profileinstaller-1.3.1\AndroidManifest.xml:49:13-51:29
+101                <action android:name="androidx.profileinstaller.action.BENCHMARK_OPERATION" />
+101-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\Deus\.gradle\caches\8.13\transforms\91c6e701c72cc6c9438b02635e5622b3\transformed\profileinstaller-1.3.1\AndroidManifest.xml:50:17-95
+101-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\Deus\.gradle\caches\8.13\transforms\91c6e701c72cc6c9438b02635e5622b3\transformed\profileinstaller-1.3.1\AndroidManifest.xml:50:25-92
+102            </intent-filter>
+103        </receiver>
+104    </application>
+105
+106</manifest>

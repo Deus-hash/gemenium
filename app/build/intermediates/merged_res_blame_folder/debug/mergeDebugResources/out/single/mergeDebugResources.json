@@ -1,0 +1,66 @@
+[
+    {
+        "merged": "C:\\Users\\Deus\\.gradle\\daemon\\8.13\\com.gemini.dnsswitcher.app-debug-36:\\layout_item_dns.xml.flat",
+        "source": "C:\\Users\\Deus\\.gradle\\daemon\\8.13\\com.gemini.dnsswitcher.app-main-38:\\layout\\item_dns.xml"
+    },
+    {
+        "merged": "C:\\Users\\Deus\\.gradle\\daemon\\8.13\\com.gemini.dnsswitcher.app-debug-36:\\drawable_ic_drag_handle.xml.flat",
+        "source": "C:\\Users\\Deus\\.gradle\\daemon\\8.13\\com.gemini.dnsswitcher.app-main-38:\\drawable\\ic_drag_handle.xml"
+    },
+    {
+        "merged": "C:\\Users\\Deus\\.gradle\\daemon\\8.13\\com.gemini.dnsswitcher.app-debug-36:\\drawable_ic_launcher_foreground.xml.flat",
+        "source": "C:\\Users\\Deus\\.gradle\\daemon\\8.13\\com.gemini.dnsswitcher.app-main-38:\\drawable\\ic_launcher_foreground.xml"
+    },
+    {
+        "merged": "C:\\Users\\Deus\\.gradle\\daemon\\8.13\\com.gemini.dnsswitcher.app-debug-36:\\drawable_widget_bg.xml.flat",
+        "source": "C:\\Users\\Deus\\.gradle\\daemon\\8.13\\com.gemini.dnsswitcher.app-main-38:\\drawable\\widget_bg.xml"
+    },
+    {
+        "merged": "C:\\Users\\Deus\\.gradle\\daemon\\8.13\\com.gemini.dnsswitcher.app-debug-36:\\layout_dialog_edit_dns.xml.flat",
+        "source": "C:\\Users\\Deus\\.gradle\\daemon\\8.13\\com.gemini.dnsswitcher.app-main-38:\\layout\\dialog_edit_dns.xml"
+    },
+    {
+        "merged": "C:\\Users\\Deus\\.gradle\\daemon\\8.13\\com.gemini.dnsswitcher.app-debug-36:\\drawable_card_rounded_bg.xml.flat",
+        "source": "C:\\Users\\Deus\\.gradle\\daemon\\8.13\\com.gemini.dnsswitcher.app-main-38:\\drawable\\card_rounded_bg.xml"
+    },
+    {
+        "merged": "C:\\Users\\Deus\\.gradle\\daemon\\8.13\\com.gemini.dnsswitcher.app-debug-36:\\xml_dns_widget_info.xml.flat",
+        "source": "C:\\Users\\Deus\\.gradle\\daemon\\8.13\\com.gemini.dnsswitcher.app-main-38:\\xml\\dns_widget_info.xml"
+    },
+    {
+        "merged": "C:\\Users\\Deus\\.gradle\\daemon\\8.13\\com.gemini.dnsswitcher.app-debug-36:\\mipmap-anydpi-v26_ic_launcher_round.xml.flat",
+        "source": "C:\\Users\\Deus\\.gradle\\daemon\\8.13\\com.gemini.dnsswitcher.app-main-38:\\mipmap-anydpi-v26\\ic_launcher_round.xml"
+    },
+    {
+        "merged": "C:\\Users\\Deus\\.gradle\\daemon\\8.13\\com.gemini.dnsswitcher.app-debug-36:\\drawable_badge_active_bg.xml.flat",
+        "source": "C:\\Users\\Deus\\.gradle\\daemon\\8.13\\com.gemini.dnsswitcher.app-main-38:\\drawable\\badge_active_bg.xml"
+    },
+    {
+        "merged": "C:\\Users\\Deus\\.gradle\\daemon\\8.13\\com.gemini.dnsswitcher.app-debug-36:\\mipmap_ic_launcher_round.xml.flat",
+        "source": "C:\\Users\\Deus\\.gradle\\daemon\\8.13\\com.gemini.dnsswitcher.app-main-38:\\mipmap\\ic_launcher_round.xml"
+    },
+    {
+        "merged": "com.gemini.dnsswitcher.app-debug-36:/layout_item_dns.xml.flat",
+        "source": "com.gemini.dnsswitcher.app-main-38:/layout/item_dns.xml"
+    },
+    {
+        "merged": "C:\\Users\\Deus\\.gradle\\daemon\\8.13\\com.gemini.dnsswitcher.app-debug-36:\\mipmap-anydpi-v26_ic_launcher.xml.flat",
+        "source": "C:\\Users\\Deus\\.gradle\\daemon\\8.13\\com.gemini.dnsswitcher.app-main-38:\\mipmap-anydpi-v26\\ic_launcher.xml"
+    },
+    {
+        "merged": "C:\\Users\\Deus\\.gradle\\daemon\\8.13\\com.gemini.dnsswitcher.app-debug-36:\\mipmap_ic_launcher.xml.flat",
+        "source": "C:\\Users\\Deus\\.gradle\\daemon\\8.13\\com.gemini.dnsswitcher.app-main-38:\\mipmap\\ic_launcher.xml"
+    },
+    {
+        "merged": "C:\\Users\\Deus\\.gradle\\daemon\\8.13\\com.gemini.dnsswitcher.app-debug-36:\\layout_widget_dns.xml.flat",
+        "source": "C:\\Users\\Deus\\.gradle\\daemon\\8.13\\com.gemini.dnsswitcher.app-main-38:\\layout\\widget_dns.xml"
+    },
+    {
+        "merged": "C:\\Users\\Deus\\.gradle\\daemon\\8.13\\com.gemini.dnsswitcher.app-debug-36:\\layout_activity_main.xml.flat",
+        "source": "C:\\Users\\Deus\\.gradle\\daemon\\8.13\\com.gemini.dnsswitcher.app-main-38:\\layout\\activity_main.xml"
+    },
+    {
+        "merged": "C:\\Users\\Deus\\.gradle\\daemon\\8.13\\com.gemini.dnsswitcher.app-debug-36:\\drawable_ic_launcher_background.xml.flat",
+        "source": "C:\\Users\\Deus\\.gradle\\daemon\\8.13\\com.gemini.dnsswitcher.app-main-38:\\drawable\\ic_launcher_background.xml"
+    }
+]
