@@ -22,7 +22,15 @@ class DnsRepository private constructor(context: Context) {
     private val _selectedDnsId = MutableStateFlow<String?>(null)
     val selectedDnsId: StateFlow<String?> = _selectedDnsId.asStateFlow()
 
+    private val _appMode = MutableStateFlow<String>("DNS") // "DNS" or "PROXY"
+    val appMode: StateFlow<String> = _appMode.asStateFlow()
+
+    private val _proxyString = MutableStateFlow<String>("")
+    val proxyString: StateFlow<String> = _proxyString.asStateFlow()
+
     init {
+        _appMode.value = prefs.getString(KEY_APP_MODE, "DNS") ?: "DNS"
+        _proxyString.value = prefs.getString(KEY_PROXY_STRING, "") ?: ""
         loadServers()
     }
 
@@ -113,9 +121,26 @@ class DnsRepository private constructor(context: Context) {
         }
     }
 
+    fun setAppMode(mode: String) {
+        prefs.edit().putString(KEY_APP_MODE, mode).apply()
+        _appMode.value = mode
+    }
+
+    fun setProxyString(str: String) {
+        prefs.edit().putString(KEY_PROXY_STRING, str.trim()).apply()
+        _proxyString.value = str.trim()
+    }
+
+    fun getProxyConfig(): com.gemini.dnsswitcher.service.proxy.ProxyConfig? {
+        val s = _proxyString.value
+        return if (s.isNotEmpty()) com.gemini.dnsswitcher.service.proxy.ProxyConfig.parse(s) else null
+    }
+
     companion object {
         private const val KEY_DNS_LIST = "key_dns_list"
         private const val KEY_SELECTED_ID = "key_selected_id"
+        private const val KEY_APP_MODE = "key_app_mode"
+        private const val KEY_PROXY_STRING = "key_proxy_string"
 
         @Volatile
         private var INSTANCE: DnsRepository? = null

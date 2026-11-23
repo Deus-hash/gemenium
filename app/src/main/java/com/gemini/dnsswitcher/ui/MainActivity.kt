@@ -7,6 +7,7 @@ import android.content.pm.PackageManager
 import android.net.VpnService
 import android.os.Build
 import android.os.Bundle
+import android.view.View
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
@@ -124,10 +125,58 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun setupListeners() {
+        // Переключатель режимов DNS / Прокси
+        binding.toggleMode.addOnButtonCheckedListener { _, checkedId, isChecked ->
+            if (isChecked) {
+                if (checkedId == R.id.btnModeDns) {
+                    viewModel.setAppMode("DNS")
+                } else if (checkedId == R.id.btnModeProxy) {
+                    viewModel.setAppMode("PROXY")
+                }
+            }
+        }
+
+        binding.btnSaveProxy.setOnClickListener {
+            val text = binding.etProxyInput.text?.toString().orEmpty().trim()
+            viewModel.setProxyString(text)
+            Toast.makeText(this, "Прокси сохранен", Toast.LENGTH_SHORT).show()
+        }
+
+        binding.btnTestProxy.setOnClickListener {
+            val text = binding.etProxyInput.text?.toString().orEmpty().trim()
+            if (text.isEmpty()) {
+                Toast.makeText(this, "Сначала введите прокси", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+            viewModel.setProxyString(text)
+
+            binding.tvProxyTestResult.visibility = View.VISIBLE
+            binding.tvProxyTestResult.text = "Проверка подключения..."
+            binding.tvProxyTestResult.setTextColor(ContextCompat.getColor(this, R.color.text_secondary))
+
+            lifecycleScope.launch {
+                val ping = viewModel.testProxy()
+                if (ping != null) {
+                    val detected = viewModel.detectProxyType()
+                    binding.tvProxyTestResult.text = "✓ Подключено! Пинг: ${ping}мс (Протокол: $detected)"
+                    binding.tvProxyTestResult.setTextColor(ContextCompat.getColor(this@MainActivity, R.color.status_green))
+                    binding.tvProxyDetectedType.text = "Протокол: $detected (Определен автоматически)"
+                } else {
+                    binding.tvProxyTestResult.text = "✗ Ошибка: сервер не отвечает или неверный логин/пароль"
+                    binding.tvProxyTestResult.setTextColor(ContextCompat.getColor(this@MainActivity, R.color.status_red))
+                }
+            }
+        }
+
         binding.switchVpn.setOnClickListener {
             val isChecked = binding.switchVpn.isChecked
             val isRunning = DnsVpnService.isServiceRunning.value
             if (isChecked && !isRunning) {
+                if (viewModel.appMode.value == "PROXY" && viewModel.proxyString.value.isEmpty()) {
+                    Toast.makeText(this, "Введите прокси перед включением", Toast.LENGTH_SHORT).show()
+                    binding.switchVpn.isChecked = false
+                    return@setOnClickListener
+                }
                 checkAndStartVpn()
             } else if (!isChecked && isRunning) {
                 DnsVpnService.stop(this)
@@ -152,6 +201,30 @@ class MainActivity : AppCompatActivity() {
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 launch {
+                    viewModel.appMode.collectLatest { mode ->
+                        if (mode == "PROXY") {
+                            binding.toggleMode.check(R.id.btnModeProxy)
+                            binding.layoutDnsContainer.visibility = View.GONE
+                            binding.layoutProxyContainer.visibility = View.VISIBLE
+                            binding.fabAddDns.visibility = View.GONE
+                        } else {
+                            binding.toggleMode.check(R.id.btnModeDns)
+                            binding.layoutDnsContainer.visibility = View.VISIBLE
+                            binding.layoutProxyContainer.visibility = View.GONE
+                            binding.fabAddDns.visibility = View.VISIBLE
+                        }
+                    }
+                }
+
+                launch {
+                    viewModel.proxyString.collectLatest { pStr ->
+                        if (binding.etProxyInput.text?.toString() != pStr) {
+                            binding.etProxyInput.setText(pStr)
+                        }
+                    }
+                }
+
+                launch {
                     DnsVpnService.isServiceRunning.collectLatest { running ->
                         binding.switchVpn.isChecked = running
                         if (running) {
@@ -174,7 +247,7 @@ class MainActivity : AppCompatActivity() {
                         if (dns != null && DnsVpnService.isServiceRunning.value) {
                             val ipDisplay = if (ip != null && ip != dns.host) " [IP: $ip]" else ""
                             val pingDisplay = if (ping != null) " • Пинг: ${ping}мс" else ""
-                            binding.tvActiveDns.text = "Текущий сервер: ${dns.name} (${dns.host})$ipDisplay$pingDisplay"
+                            binding.tvActiveDns.text = "Текущий: ${dns.name}$ipDisplay$pingDisplay"
                         }
                     }
                 }

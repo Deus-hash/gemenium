@@ -7,6 +7,7 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.content.pm.ServiceInfo
+import android.net.ProxyInfo
 import android.net.VpnService
 import android.os.Build
 import android.os.ParcelFileDescriptor
@@ -14,6 +15,8 @@ import androidx.core.app.NotificationCompat
 import com.gemini.dnsswitcher.R
 import com.gemini.dnsswitcher.data.model.DnsServer
 import com.gemini.dnsswitcher.data.repository.DnsRepository
+import com.gemini.dnsswitcher.service.proxy.LocalProxyBridge
+import com.gemini.dnsswitcher.service.proxy.ProxyConfig
 import com.gemini.dnsswitcher.ui.MainActivity
 import com.gemini.dnsswitcher.widget.DnsWidgetProvider
 import kotlinx.coroutines.*
@@ -29,6 +32,7 @@ class DnsVpnService : VpnService() {
 
     private var vpnInterface: ParcelFileDescriptor? = null
     private var packetRelay: DnsPacketRelay? = null
+    private var localProxyBridge: LocalProxyBridge? = null
     private val healthChecker by lazy { DnsHealthChecker(this) }
     private lateinit var repository: DnsRepository
 
@@ -127,15 +131,67 @@ class DnsVpnService : VpnService() {
         _isServiceRunning.value = true
 
         scope.launch {
-            dnsList = repository.dnsList.value
-            val selectedId = repository.getSelectedDnsId()
-            val foundIndex = dnsList.indexOfFirst { it.id == selectedId }
-            currentDnsIndex = if (foundIndex >= 0) foundIndex else 0
-
-            initVpnInterface()
-            applyCurrentDns()
-            startHealthCheckLoop()
+            val mode = repository.appMode.value
+            if (mode == "PROXY") {
+                startProxyMode()
+            } else {
+                startDnsMode()
+            }
         }
+    }
+
+    private suspend fun startProxyMode() {
+        val proxyConfig = repository.getProxyConfig()
+        if (proxyConfig == null) {
+            startDnsMode()
+            return
+        }
+
+        localProxyBridge?.stop()
+        localProxyBridge = LocalProxyBridge(this, proxyConfig).also { it.start() }
+
+        try {
+            val builder = Builder().apply {
+                setSession("GeminiProxy")
+                addAddress("10.0.0.2", 24)
+                addDnsServer("10.0.0.1")
+                addRoute("10.0.0.1", 32)
+                allowBypass()
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                    setHttpProxy(ProxyInfo.buildDirectProxy("127.0.0.1", 18080))
+                }
+                setBlocking(false)
+            }
+
+            vpnInterface = builder.establish()
+            val pfd = vpnInterface
+            if (pfd != null) {
+                packetRelay?.stop()
+                packetRelay = DnsPacketRelay(this, pfd).also {
+                    it.setUpstream("1.1.1.1")
+                    it.start()
+                }
+            }
+
+            _currentActiveDns.value = DnsServer("proxy", "Прокси (${proxyConfig.host})", proxyConfig.host)
+            _currentResolvedIp.value = "${proxyConfig.host}:${proxyConfig.port}"
+            updateNotification("Прокси активен: ${proxyConfig.host}:${proxyConfig.port}")
+            DnsWidgetProvider.updateAllWidgets(this, true, "Прокси: ${proxyConfig.host}")
+        } catch (e: Exception) {
+            e.printStackTrace()
+            stopVpn()
+        }
+    }
+
+    private suspend fun startDnsMode() {
+        dnsList = repository.dnsList.value
+        val selectedId = repository.getSelectedDnsId()
+        val foundIndex = dnsList.indexOfFirst { it.id == selectedId }
+        currentDnsIndex = if (foundIndex >= 0) foundIndex else 0
+
+        initVpnInterface()
+        applyCurrentDns()
+        startHealthCheckLoop()
     }
 
     private fun switchDnsById(id: String) {
@@ -249,6 +305,9 @@ class DnsVpnService : VpnService() {
 
         packetRelay?.stop()
         packetRelay = null
+
+        localProxyBridge?.stop()
+        localProxyBridge = null
 
         try {
             vpnInterface?.close()

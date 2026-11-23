@@ -21,13 +21,13 @@
             app:cardBackgroundColor="@color/card_bg"
             app:strokeColor="#334155"
             app:strokeWidth="1dp"
-            android:layout_marginBottom="16dp">
+            android:layout_marginBottom="12dp">
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:padding="20dp">
+                android:padding="16dp">
 
                 <RelativeLayout
                     android:layout_width="match_parent"
@@ -37,9 +37,9 @@
                         android:id="@+id/tvAppTitle"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Gemini DNS"
+                        android:text="Gemini DNS &amp; Proxy"
                         android:textColor="@color/text_primary"
-                        android:textSize="22sp"
+                        android:textSize="20sp"
                         android:textStyle="bold" />
 
                     <com.google.android.material.switchmaterial.SwitchMaterial
@@ -54,14 +54,14 @@
                     android:layout_width="match_parent"
                     android:layout_height="1dp"
                     android:background="#334155"
-                    android:layout_marginTop="12dp"
-                    android:layout_marginBottom="12dp" />
+                    android:layout_marginTop="10dp"
+                    android:layout_marginBottom="10dp" />
 
                 <TextView
                     android:id="@+id/tvStatus"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="VPN выключен"
+                    android:text="Туннель выключен"
                     android:textColor="@color/status_red"
                     android:textSize="14sp"
                     android:textStyle="bold" />
@@ -77,21 +77,198 @@
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
-        <TextView
-            android:layout_width="wrap_content"
+        <!-- Mode Toggle: DNS vs PROXY -->
+        <com.google.android.material.button.MaterialButtonToggleGroup
+            android:id="@+id/toggleMode"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Список DNS-серверов (с авто-переключением):"
-            android:textColor="@color/text_primary"
-            android:textSize="16sp"
-            android:textStyle="bold"
-            android:layout_marginBottom="8dp" />
+            android:layout_marginBottom="12dp"
+            app:singleSelection="true"
+            app:selectionRequired="true">
 
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/rvDns"
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnModeDns"
+                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="DNS Серверы"
+                android:textColor="@color/text_primary" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnModeProxy"
+                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Прокси (Обход)"
+                android:textColor="@color/text_primary" />
+        </com.google.android.material.button.MaterialButtonToggleGroup>
+
+        <!-- DNS MODE CONTAINER -->
+        <LinearLayout
+            android:id="@+id/layoutDnsContainer"
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_weight="1"
-            tools:listitem="@layout/item_dns" />
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Список DNS-серверов:"
+                android:textColor="@color/text_primary"
+                android:textSize="15sp"
+                android:textStyle="bold"
+                android:layout_marginBottom="8dp" />
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/rvDns"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                tools:listitem="@layout/item_dns" />
+        </LinearLayout>
+
+        <!-- PROXY MODE CONTAINER -->
+        <ScrollView
+            android:id="@+id/layoutProxyContainer"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:visibility="gone">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <com.google.android.material.card.MaterialCardView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    app:cardCornerRadius="14dp"
+                    app:cardBackgroundColor="@color/card_bg"
+                    app:strokeColor="#334155"
+                    app:strokeWidth="1dp"
+                    android:layout_marginBottom="12dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:padding="16dp">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Параметры прокси"
+                            android:textColor="@color/text_primary"
+                            android:textSize="16sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="4dp"
+                            android:text="Формат: логин:пароль@адрес:порт или адрес:порт"
+                            android:textColor="@color/text_secondary"
+                            android:textSize="12sp" />
+
+                        <com.google.android.material.textfield.TextInputLayout
+                            android:id="@+id/tilProxyInput"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="12dp"
+                            android:hint="логин:пароль@хост:порт"
+                            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox">
+
+                            <com.google.android.material.textfield.TextInputEditText
+                                android:id="@+id/etProxyInput"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:inputType="textUri|textNoSuggestions"
+                                android:textSize="14sp" />
+                        </com.google.android.material.textfield.TextInputLayout>
+
+                        <TextView
+                            android:id="@+id/tvProxyDetectedType"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="10dp"
+                            android:text="Протокол: Автоопределение (SOCKS5 / HTTP)"
+                            android:textColor="#38BDF8"
+                            android:textSize="13sp" />
+
+                        <TextView
+                            android:id="@+id/tvProxyTestResult"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="4dp"
+                            android:text=""
+                            android:textSize="13sp"
+                            android:visibility="gone" />
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="14dp"
+                            android:orientation="horizontal">
+
+                            <Button
+                                android:id="@+id/btnSaveProxy"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="Сохранить"
+                                android:backgroundTint="@color/purple_500" />
+
+                            <Button
+                                android:id="@+id/btnTestProxy"
+                                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:layout_marginStart="8dp"
+                                android:text="Проверить" />
+                        </LinearLayout>
+                    </LinearLayout>
+                </com.google.android.material.card.MaterialCardView>
+
+                <!-- Helper Card -->
+                <com.google.android.material.card.MaterialCardView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    app:cardCornerRadius="12dp"
+                    app:cardBackgroundColor="#0F2137"
+                    app:strokeColor="#1E3A5F"
+                    app:strokeWidth="1dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:padding="14dp">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="💡 Как это работает для Gemini"
+                            android:textColor="#38BDF8"
+                            android:textSize="14sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="6dp"
+                            android:text="При включении туннеля в режиме Прокси весь трафик Gemini и браузера направляется через ваш удаленный сервер. Протокол (SOCKS5 или HTTP CONNECT) определяется автоматически."
+                            android:textColor="#94A3B8"
+                            android:textSize="12sp"
+                            android:lineSpacingExtra="2dp" />
+                    </LinearLayout>
+                </com.google.android.material.card.MaterialCardView>
+
+            </LinearLayout>
+        </ScrollView>
 
     </LinearLayout>
 
