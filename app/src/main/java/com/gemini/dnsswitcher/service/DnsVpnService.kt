@@ -167,8 +167,9 @@ class DnsVpnService : VpnService() {
             val pfd = vpnInterface
             if (pfd != null) {
                 packetRelay?.stop()
+                val upstreamDns = repository.dnsList.value.firstOrNull()?.host ?: "8.8.8.8"
                 packetRelay = DnsPacketRelay(this, pfd).also {
-                    it.setUpstream("1.1.1.1")
+                    it.setUpstream(upstreamDns)
                     it.start()
                 }
             }
