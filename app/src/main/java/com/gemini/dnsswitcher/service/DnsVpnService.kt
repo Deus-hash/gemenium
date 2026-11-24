@@ -232,6 +232,7 @@ class DnsVpnService : VpnService() {
             _currentResolvedIp.value = "${proxyConfig.host}:${proxyConfig.port}"
             updateNotification("Прокси активен: ${proxyConfig.host}:${proxyConfig.port}")
             DnsWidgetProvider.updateAllWidgets(this, true, "Прокси: ${proxyConfig.host}")
+            DnsTileService.requestTileUpdate(this)
 
             // Фоновый замер пинга прокси
             scope.launch {
@@ -327,6 +328,7 @@ class DnsVpnService : VpnService() {
         val pingStr = if (quickPing != null) " • ${quickPing}мс" else ""
         updateNotification("Активен: ${targetDns.name} (${resolvedIp ?: targetDns.host})$pingStr")
         DnsWidgetProvider.updateAllWidgets(this, true, targetDns.name)
+        DnsTileService.requestTileUpdate(this)
     }
 
     private fun startHealthCheckLoop() = scope.launch {
@@ -388,6 +390,7 @@ class DnsVpnService : VpnService() {
         }
 
         DnsWidgetProvider.updateAllWidgets(this, false, null)
+        DnsTileService.requestTileUpdate(this)
         stopForeground(STOP_FOREGROUND_REMOVE)
         stopSelf()
     }
@@ -430,7 +433,7 @@ class DnsVpnService : VpnService() {
         return NotificationCompat.Builder(this, CHANNEL_ID)
             .setContentTitle("Gemini DNS Switcher")
             .setContentText(text)
-            .setSmallIcon(android.R.drawable.ic_dialog_info)
+            .setSmallIcon(R.drawable.ic_qs_tile)
             .setContentIntent(pendingIntent)
             .addAction(android.R.drawable.ic_menu_close_clear_cancel, "Отключить", stopPendingIntent)
             .setOngoing(true)

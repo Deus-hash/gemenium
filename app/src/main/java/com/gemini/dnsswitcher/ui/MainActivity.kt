@@ -2,8 +2,11 @@ package com.gemini.dnsswitcher.ui
 
 import android.Manifest
 import android.app.Activity
+import android.app.StatusBarManager
+import android.content.ComponentName
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.graphics.drawable.Icon
 import android.net.VpnService
 import android.os.Build
 import android.os.Bundle
@@ -24,6 +27,7 @@ import com.gemini.dnsswitcher.R
 import com.gemini.dnsswitcher.data.model.DnsServer
 import com.gemini.dnsswitcher.databinding.ActivityMainBinding
 import com.gemini.dnsswitcher.databinding.DialogEditDnsBinding
+import com.gemini.dnsswitcher.service.DnsTileService
 import com.gemini.dnsswitcher.service.DnsVpnService
 import com.gemini.dnsswitcher.service.proxy.ProxyConfig
 import com.gemini.dnsswitcher.service.proxy.ProxyType
@@ -135,7 +139,12 @@ class MainActivity : AppCompatActivity() {
                 } else if (checkedId == R.id.btnModeProxy) {
                     viewModel.setAppMode("PROXY")
                 }
+                DnsTileService.requestTileUpdate(this)
             }
+        }
+
+        binding.btnAddTile.setOnClickListener {
+            requestAddQuickTile()
         }
 
         binding.btnSaveProxy.setOnClickListener {
@@ -339,6 +348,33 @@ class MainActivity : AppCompatActivity() {
             }
             .setNegativeButton(R.string.cancel, null)
             .show()
+    }
+
+    private fun requestAddQuickTile() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            val statusBarManager = getSystemService(StatusBarManager::class.java)
+            statusBarManager?.requestAddTileService(
+                ComponentName(this, DnsTileService::class.java),
+                getString(R.string.app_name),
+                Icon.createWithResource(this, R.drawable.ic_qs_tile),
+                mainExecutor
+            ) { resultCode ->
+                when (resultCode) {
+                    StatusBarManager.TILE_ADD_REQUEST_RESULT_TILE_ADDED ->
+                        Toast.makeText(this, "Значок добавлен в шторку!", Toast.LENGTH_SHORT).show()
+                    StatusBarManager.TILE_ADD_REQUEST_RESULT_TILE_ALREADY_ADDED ->
+                        Toast.makeText(this, "Значок уже добавлен в шторку", Toast.LENGTH_SHORT).show()
+                    else ->
+                        Toast.makeText(this, "Добавьте «Gemini DNS» через редактирование шторки", Toast.LENGTH_SHORT).show()
+                }
+            }
+        } else {
+            AlertDialog.Builder(this)
+                .setTitle("Значок в шторке")
+                .setMessage("Смахните верхнюю шторку вниз дважды, нажмите на иконку редактирования (карандаш) и перетащите кнопку «Gemini DNS» на панель быстрых настроек.")
+                .setPositiveButton("Понятно", null)
+                .show()
+        }
     }
 
     companion object {
