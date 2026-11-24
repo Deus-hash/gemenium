@@ -7,62 +7,92 @@ import kotlinx.coroutines.*
 import java.io.EOFException
 import java.io.InputStream
 import java.io.OutputStream
+import java.net.Inet4Address
 import java.net.InetAddress
 import java.net.InetSocketAddress
 import java.net.ServerSocket
 import java.net.Socket
 
 /**
- * Локальный мост-прокси на 127.0.0.1:18080.
+ * Локальный мост-прокси на 127.0.0.1:<port>.
  * Поддерживает любые сайты, Google-сервисы, веб-приложения и внешние ссылки.
- * Гарантирует корректную передачу TLS-рукопожатий и завершение TCP-потоков.
  */
 class LocalProxyBridge(
     private val vpnService: VpnService,
     private val proxyConfig: ProxyConfig
 ) {
     private val tag = "LocalProxyBridge"
+    private val ipv4Regex = Regex("""^\d{1,3}(\.\d{1,3}){3}$""")
 
     @Volatile
     private var isRunning = false
     private var serverSocket: ServerSocket? = null
     private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
 
+    private val detectedTypeDeferred = CompletableDeferred<ProxyType>()
+
     @Volatile
-    var detectedType: ProxyType = proxyConfig.type
+    var actualPort: Int = 18080
+        private set
 
-    val localPort = 18080
+    @Volatile
+    private var cachedProxyAddresses: List<InetAddress> = emptyList()
+    @Volatile
+    private var cachedProxyResolvedAt: Long = 0L
 
-    fun start() {
-        if (isRunning) return
+    fun start(): Int {
+        if (isRunning) return actualPort
         isRunning = true
 
+        // 1. Немедленно поднимаем ServerSocket с SO_REUSEADDR до установки VPN-интерфейса
+        val ss = ServerSocket()
+        ss.reuseAddress = true
+        val loopback = InetAddress.getByName("127.0.0.1")
+        try {
+            ss.bind(InetSocketAddress(loopback, 18080), 256)
+            actualPort = 18080
+        } catch (_: Exception) {
+            ss.bind(InetSocketAddress(loopback, 0), 256)
+            actualPort = ss.localPort
+        }
+        serverSocket = ss
+        Log.d(tag, "Локальный прокси-мост запущен на 127.0.0.1:$actualPort")
+
+        // 2. Асинхронно определяем протокол прокси (если AUTO) и кэшируем IP-адреса
         scope.launch {
-            if (detectedType == ProxyType.AUTO) {
-                detectedType = ProxyDetector.detectType(proxyConfig, vpnService)
-                Log.d(tag, "Автоопределение прокси: $detectedType")
+            val type = if (proxyConfig.type == ProxyType.AUTO) {
+                ProxyDetector.detectType(proxyConfig, vpnService)
+            } else {
+                proxyConfig.type
             }
+            detectedTypeDeferred.complete(type)
+            Log.d(tag, "Протокол прокси определен: $type")
+        }
 
+        // 3. Цикл приема подключений
+        scope.launch {
             try {
-                serverSocket = ServerSocket(localPort, 256, InetAddress.getByName("127.0.0.1"))
-                Log.d(tag, "Локальный прокси-мост запущен на 127.0.0.1:$localPort")
-
                 while (isRunning) {
-                    val clientSocket = serverSocket?.accept() ?: break
+                    val clientSocket = ss.accept()
                     scope.launch {
                         handleClient(clientSocket)
                     }
                 }
             } catch (e: Exception) {
                 if (isRunning) {
-                    Log.e(tag, "Ошибка в ServerSocket: ${e.message}")
+                    Log.e(tag, "Ошибка в цикле ServerSocket: ${e.message}")
                 }
             }
         }
+
+        return actualPort
     }
 
     fun stop() {
         isRunning = false
+        if (!detectedTypeDeferred.isCompleted) {
+            detectedTypeDeferred.cancel()
+        }
         try {
             serverSocket?.close()
             serverSocket = null
@@ -85,12 +115,12 @@ class LocalProxyBridge(
 
             val method = parts[0]
             val uri = parts[1]
+            val version = parts.getOrElse(2) { "HTTP/1.1" }
 
             val targetHost: String
             val targetPort: Int
 
             if (method.equals("CONNECT", ignoreCase = true)) {
-                // HTTPS туннель: CONNECT domain.com:443 HTTP/1.1
                 val colon = uri.lastIndexOf(':')
                 if (colon != -1) {
                     targetHost = uri.substring(0, colon)
@@ -100,13 +130,13 @@ class LocalProxyBridge(
                     targetPort = 443
                 }
 
-                // Считываем заголовки клиента
                 while (true) {
                     val line = readLine(clientIn) ?: break
                     if (line.isEmpty()) break
                 }
 
-                remoteSocket = connectToUpstream(targetHost, targetPort)
+                val type = try { detectedTypeDeferred.await() } catch (_: Exception) { ProxyType.SOCKS5 }
+                remoteSocket = connectToUpstream(targetHost, targetPort, type)
                 if (remoteSocket == null) {
                     clientOut.write("HTTP/1.1 502 Bad Gateway\r\n\r\n".toByteArray(Charsets.US_ASCII))
                     clientOut.flush()
@@ -114,8 +144,6 @@ class LocalProxyBridge(
                 }
 
                 remoteSocket.tcpNoDelay = true
-
-                // Отправляем подтверждение установки соединения клиенту
                 clientOut.write("HTTP/1.1 200 Connection Established\r\n\r\n".toByteArray(Charsets.US_ASCII))
                 clientOut.flush()
 
@@ -129,9 +157,7 @@ class LocalProxyBridge(
                     pipe(remoteIn, clientOut, clientSocket, remoteSocket)
                 }
                 joinAll(job1, job2)
-
             } else {
-                // Обычный HTTP запрос (GET / POST)
                 var hostHeader: String? = null
                 var portHeader = 80
                 val headers = mutableListOf<String>()
@@ -139,6 +165,7 @@ class LocalProxyBridge(
                 while (true) {
                     val line = readLine(clientIn) ?: break
                     if (line.isEmpty()) break
+                    if (line.startsWith("Proxy-Connection:", ignoreCase = true)) continue
                     headers.add(line)
                     if (line.startsWith("Host:", ignoreCase = true)) {
                         val h = line.substring(5).trim()
@@ -153,11 +180,12 @@ class LocalProxyBridge(
                     }
                 }
 
-                val finalHost = hostHeader ?: parseHostFromUri(uri)
-                targetHost = finalHost
-                targetPort = portHeader
+                val (uriHost, uriPort, relativePath) = parseUri(uri)
+                targetHost = hostHeader ?: uriHost
+                targetPort = if (hostHeader != null) portHeader else uriPort
 
-                remoteSocket = connectToUpstream(targetHost, targetPort)
+                val type = try { detectedTypeDeferred.await() } catch (_: Exception) { ProxyType.SOCKS5 }
+                remoteSocket = connectToUpstream(targetHost, targetPort, type)
                 if (remoteSocket == null) {
                     clientOut.write("HTTP/1.1 502 Bad Gateway\r\n\r\n".toByteArray(Charsets.US_ASCII))
                     clientOut.flush()
@@ -168,8 +196,8 @@ class LocalProxyBridge(
                 val remoteOut = remoteSocket.getOutputStream()
                 val remoteIn = remoteSocket.getInputStream()
 
-                // Отправляем оригинальный HTTP запрос
-                remoteOut.write("$requestLine\r\n".toByteArray(Charsets.US_ASCII))
+                // Пересылаем запрос с относительным путем (т.к. мы уже протуннелированы к targetHost:targetPort)
+                remoteOut.write("$method $relativePath $version\r\n".toByteArray(Charsets.US_ASCII))
                 for (h in headers) {
                     remoteOut.write("$h\r\n".toByteArray(Charsets.US_ASCII))
                 }
@@ -191,60 +219,71 @@ class LocalProxyBridge(
         }
     }
 
-    private fun connectToUpstream(targetHost: String, targetPort: Int): Socket? {
-        val socket = Socket()
-        vpnService.protect(socket)
-        socket.soTimeout = 12000
+    private fun getProxyAddresses(): List<InetAddress> {
+        val now = System.currentTimeMillis()
+        if (cachedProxyAddresses.isNotEmpty() && now - cachedProxyResolvedAt < 60_000L) {
+            return cachedProxyAddresses
+        }
+        return try {
+            val resolved = ProxyDetector.resolveAddresses(proxyConfig.host, vpnService)
+            cachedProxyAddresses = resolved
+            cachedProxyResolvedAt = now
+            resolved
+        } catch (_: Exception) {
+            cachedProxyAddresses
+        }
+    }
 
-        try {
-            socket.connect(InetSocketAddress(proxyConfig.host, proxyConfig.port), 10000)
-
-            val type = if (detectedType == ProxyType.AUTO) ProxyType.SOCKS5 else detectedType
-
-            if (type == ProxyType.SOCKS5) {
-                if (!handshakeSocks5(socket, targetHost, targetPort)) {
-                    socket.close()
-                    return null
-                }
-            } else {
-                if (!handshakeHttp(socket, targetHost, targetPort)) {
-                    socket.close()
-                    return null
-                }
-            }
-
-            socket.soTimeout = 0
-            return socket
-        } catch (e: Exception) {
-            Log.e(tag, "Ошибка подключения к удаленному прокси для $targetHost:$targetPort -> ${e.message}")
-            try { socket.close() } catch (_: Exception) {}
+    private fun connectToUpstream(targetHost: String, targetPort: Int, type: ProxyType): Socket? {
+        val addresses = getProxyAddresses()
+        if (addresses.isEmpty()) {
+            Log.e(tag, "Не удалось разрешить адрес прокси: ${proxyConfig.host}")
             return null
         }
+
+        for (addr in addresses) {
+            val socket = Socket()
+            vpnService.protect(socket)
+            socket.soTimeout = 12000
+
+            try {
+                socket.connect(InetSocketAddress(addr, proxyConfig.port), 8000)
+
+                val ok = if (type == ProxyType.SOCKS5) {
+                    handshakeSocks5(socket, targetHost, targetPort)
+                } else {
+                    handshakeHttp(socket, targetHost, targetPort)
+                }
+
+                if (ok) {
+                    socket.soTimeout = 0
+                    return socket
+                } else {
+                    socket.close()
+                }
+            } catch (e: Exception) {
+                Log.e(tag, "Ошибка подключения к ${addr.hostAddress}:${proxyConfig.port} -> ${e.message}")
+                try { socket.close() } catch (_: Exception) {}
+            }
+        }
+        return null
     }
 
     private fun handshakeSocks5(socket: Socket, targetHost: String, targetPort: Int): Boolean {
         val out = socket.getOutputStream()
         val input = socket.getInputStream()
 
-        // 1. Приветствие
         out.write(byteArrayOf(0x05, 0x02, 0x00, 0x02))
         out.flush()
 
         val greetingResp = ByteArray(2)
         readFully(input, greetingResp)
-        if (greetingResp[0] != 0x05.toByte()) {
-            return false
-        }
+        if (greetingResp[0] != 0x05.toByte()) return false
 
         val authMethod = greetingResp[1].toInt() and 0xFF
-
-        // 2. Авторизация RFC 1929
         if (authMethod == 0x02) {
-            val user = proxyConfig.username ?: ""
-            val pass = proxyConfig.password ?: ""
-
-            val uBytes = user.toByteArray(Charsets.UTF_8)
-            val pBytes = pass.toByteArray(Charsets.UTF_8)
+            val uBytes = (proxyConfig.username ?: "").toByteArray(Charsets.UTF_8)
+            val pBytes = (proxyConfig.password ?: "").toByteArray(Charsets.UTF_8)
 
             val authPacket = ByteArray(3 + uBytes.size + pBytes.size)
             authPacket[0] = 0x01
@@ -261,35 +300,45 @@ class LocalProxyBridge(
             val authResp = ByteArray(2)
             readFully(input, authResp)
             if (authResp[1] != 0x00.toByte()) {
-                Log.e(tag, "SOCKS5: Неверный логин или пароль прокси!")
+                Log.e(tag, "SOCKS5: Ошибка авторизации")
                 return false
             }
         } else if (authMethod != 0x00) {
             return false
         }
 
-        // 3. Команда CONNECT (используем доменное имя ATYP 0x03, чтобы удаленный сервер сам разрешил DNS)
-        val hostBytes = targetHost.toByteArray(Charsets.US_ASCII)
-        val cmdPacket = ByteArray(7 + hostBytes.size)
-        cmdPacket[0] = 0x05
-        cmdPacket[1] = 0x01
-        cmdPacket[2] = 0x00
-        cmdPacket[3] = 0x03
-        cmdPacket[4] = hostBytes.size.toByte()
-        System.arraycopy(hostBytes, 0, cmdPacket, 5, hostBytes.size)
-
-        val portOffset = 5 + hostBytes.size
-        cmdPacket[portOffset] = ((targetPort ushr 8) and 0xFF).toByte()
-        cmdPacket[portOffset + 1] = (targetPort and 0xFF).toByte()
+        val cmdPacket: ByteArray
+        if (ipv4Regex.matches(targetHost)) {
+            val ipBytes = InetAddress.getByName(targetHost).address
+            cmdPacket = ByteArray(10)
+            cmdPacket[0] = 0x05
+            cmdPacket[1] = 0x01
+            cmdPacket[2] = 0x00
+            cmdPacket[3] = 0x01 // IPv4
+            System.arraycopy(ipBytes, 0, cmdPacket, 4, 4)
+            cmdPacket[8] = ((targetPort ushr 8) and 0xFF).toByte()
+            cmdPacket[9] = (targetPort and 0xFF).toByte()
+        } else {
+            val hostBytes = targetHost.toByteArray(Charsets.US_ASCII)
+            cmdPacket = ByteArray(7 + hostBytes.size)
+            cmdPacket[0] = 0x05
+            cmdPacket[1] = 0x01
+            cmdPacket[2] = 0x00
+            cmdPacket[3] = 0x03 // Domain
+            cmdPacket[4] = hostBytes.size.toByte()
+            System.arraycopy(hostBytes, 0, cmdPacket, 5, hostBytes.size)
+            val portOffset = 5 + hostBytes.size
+            cmdPacket[portOffset] = ((targetPort ushr 8) and 0xFF).toByte()
+            cmdPacket[portOffset + 1] = (targetPort and 0xFF).toByte()
+        }
 
         out.write(cmdPacket)
         out.flush()
 
-        // 4. Считываем ответ SOCKS5 сервера
         val respHeader = ByteArray(4)
         readFully(input, respHeader)
         if (respHeader[1] != 0x00.toByte()) {
-            Log.e(tag, "SOCKS5: Ошибка соединения с хостом $targetHost (Код: ${respHeader[1]})")
+            Log.e(tag, "SOCKS5: Ошибка соединения с $targetHost (код ${respHeader[1]})")
             return false
         }
 
@@ -365,7 +414,7 @@ class LocalProxyBridge(
         var bytesRead = 0
         while (bytesRead < length) {
             val count = input.read(buffer, offset + bytesRead, length - bytesRead)
-            if (count < 0) throw EOFException("Преждевременный конец потока при чтении $length байт")
+            if (count < 0) throw EOFException("Преждевременный конец потока")
             bytesRead += count
         }
     }
@@ -385,12 +434,18 @@ class LocalProxyBridge(
         return sb.toString()
     }
 
-    private fun parseHostFromUri(uri: String): String {
+    private fun parseUri(uri: String): Triple<String, Int, String> {
         return try {
             val u = java.net.URI(uri)
-            u.host ?: uri
+            val host = u.host ?: ""
+            val port = if (u.port != -1) u.port else 80
+            val path = buildString {
+                append(if (u.rawPath.isNullOrEmpty()) "/" else u.rawPath)
+                if (!u.rawQuery.isNullOrEmpty()) append("?${u.rawQuery}")
+            }
+            Triple(host, port, path)
         } catch (_: Exception) {
-            uri
+            Triple("", 80, uri)
         }
     }
 }

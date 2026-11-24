@@ -17,6 +17,7 @@ import com.gemini.dnsswitcher.data.model.DnsServer
 import com.gemini.dnsswitcher.data.repository.DnsRepository
 import com.gemini.dnsswitcher.service.proxy.LocalProxyBridge
 import com.gemini.dnsswitcher.service.proxy.ProxyConfig
+import com.gemini.dnsswitcher.service.proxy.ProxyDetector
 import com.gemini.dnsswitcher.ui.MainActivity
 import com.gemini.dnsswitcher.widget.DnsWidgetProvider
 import kotlinx.coroutines.*
@@ -45,10 +46,15 @@ class DnsVpnService : VpnService() {
         const val ACTION_START = "com.gemini.dnsswitcher.ACTION_START"
         const val ACTION_STOP = "com.gemini.dnsswitcher.ACTION_STOP"
         const val ACTION_SWITCH_DNS = "com.gemini.dnsswitcher.ACTION_SWITCH_DNS"
+        const val ACTION_RELOAD = "com.gemini.dnsswitcher.ACTION_RELOAD"
         const val EXTRA_DNS_ID = "EXTRA_DNS_ID"
 
         private const val NOTIFICATION_ID = 2001
         private const val CHANNEL_ID = "gemini_dns_vpn_channel"
+
+        @Volatile
+        var activeInstance: DnsVpnService? = null
+            private set
 
         private val _isServiceRunning = MutableStateFlow(false)
         val isServiceRunning: StateFlow<Boolean> = _isServiceRunning.asStateFlow()
@@ -87,12 +93,27 @@ class DnsVpnService : VpnService() {
             }
             context.startService(intent)
         }
+
+        fun reloadIfRunning(context: Context) {
+            if (_isServiceRunning.value) {
+                val intent = Intent(context, DnsVpnService::class.java).apply {
+                    action = ACTION_RELOAD
+                }
+                context.startService(intent)
+            }
+        }
     }
 
     override fun onCreate() {
         super.onCreate()
+        activeInstance = this
         repository = DnsRepository.getInstance(applicationContext)
         createNotificationChannel()
+    }
+
+    override fun onRevoke() {
+        stopVpn()
+        super.onRevoke()
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -101,6 +122,11 @@ class DnsVpnService : VpnService() {
             ACTION_START -> {
                 startInForeground()
                 startVpn()
+            }
+            ACTION_RELOAD -> {
+                if (isRunning) {
+                    reloadConfig()
+                }
             }
             ACTION_SWITCH_DNS -> {
                 val targetId = intent.getStringExtra(EXTRA_DNS_ID)
@@ -131,8 +157,28 @@ class DnsVpnService : VpnService() {
         _isServiceRunning.value = true
 
         scope.launch {
-            val mode = repository.appMode.value
-            if (mode == "PROXY") {
+            if (repository.appMode.value == "PROXY") {
+                startProxyMode()
+            } else {
+                startDnsMode()
+            }
+        }
+    }
+
+    private fun reloadConfig() {
+        serviceJob.cancelChildren()
+        packetRelay?.stop()
+        packetRelay = null
+        localProxyBridge?.stop()
+        localProxyBridge = null
+        try {
+            vpnInterface?.close()
+            vpnInterface = null
+        } catch (_: Exception) {}
+        _currentPingMs.value = null
+
+        scope.launch {
+            if (repository.appMode.value == "PROXY") {
                 startProxyMode()
             } else {
                 startDnsMode()
@@ -148,7 +194,15 @@ class DnsVpnService : VpnService() {
         }
 
         localProxyBridge?.stop()
-        localProxyBridge = LocalProxyBridge(this, proxyConfig).also { it.start() }
+        val bridge = LocalProxyBridge(this, proxyConfig)
+        val boundPort = try {
+            bridge.start()
+        } catch (e: Exception) {
+            e.printStackTrace()
+            stopVpn()
+            return
+        }
+        localProxyBridge = bridge
 
         try {
             val builder = Builder().apply {
@@ -158,7 +212,7 @@ class DnsVpnService : VpnService() {
                 addRoute("10.0.0.1", 32)
                 allowBypass()
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                    setHttpProxy(ProxyInfo.buildDirectProxy("127.0.0.1", 18080))
+                    setHttpProxy(ProxyInfo.buildDirectProxy("127.0.0.1", boundPort))
                 }
                 setBlocking(false)
             }
@@ -178,6 +232,14 @@ class DnsVpnService : VpnService() {
             _currentResolvedIp.value = "${proxyConfig.host}:${proxyConfig.port}"
             updateNotification("Прокси активен: ${proxyConfig.host}:${proxyConfig.port}")
             DnsWidgetProvider.updateAllWidgets(this, true, "Прокси: ${proxyConfig.host}")
+
+            // Фоновый замер пинга прокси
+            scope.launch {
+                val res = ProxyDetector.diagnoseProxy(proxyConfig, this@DnsVpnService)
+                if (isRunning && repository.appMode.value == "PROXY") {
+                    _currentPingMs.value = res.pingMs
+                }
+            }
         } catch (e: Exception) {
             e.printStackTrace()
             stopVpn()
@@ -186,6 +248,14 @@ class DnsVpnService : VpnService() {
 
     private suspend fun startDnsMode() {
         dnsList = repository.dnsList.value
+        if (dnsList.isEmpty()) {
+            _currentActiveDns.value = null
+            _currentResolvedIp.value = null
+            _currentPingMs.value = null
+            updateNotification("Список DNS пуст — добавьте сервер")
+            DnsWidgetProvider.updateAllWidgets(this, true, "Нет DNS")
+            return
+        }
         val selectedId = repository.getSelectedDnsId()
         val foundIndex = dnsList.indexOfFirst { it.id == selectedId }
         currentDnsIndex = if (foundIndex >= 0) foundIndex else 0
@@ -323,6 +393,7 @@ class DnsVpnService : VpnService() {
     }
 
     override fun onDestroy() {
+        activeInstance = null
         stopVpn()
         serviceJob.cancel()
         super.onDestroy()

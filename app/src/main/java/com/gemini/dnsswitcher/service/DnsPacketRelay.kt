@@ -24,10 +24,10 @@ class DnsPacketRelay(
     private var isRunning = false
 
     @Volatile
-    private var currentUpstreamHost: String = "1.1.1.1"
+    private var currentUpstreamHost: String = "8.8.8.8"
 
     @Volatile
-    private var currentUpstreamAddress: InetAddress? = null
+    private var currentUpstreamAddress: InetAddress? = InetAddress.getByAddress("8.8.8.8", byteArrayOf(8, 8, 8, 8))
 
     private var upstreamSocket: DatagramSocket? = null
     private var tunReaderThread: Thread? = null
@@ -62,12 +62,23 @@ class DnsPacketRelay(
         currentUpstreamHost = hostOrIp
         // При смене DNS очищаем кэш, чтобы не возвращать старые IP
         responseCache.clear()
+        val trimmed = hostOrIp.trim()
+        if (Regex("""^\d{1,3}(\.\d{1,3}){3}$""").matches(trimmed)) {
+            try {
+                currentUpstreamAddress = InetAddress.getByName(trimmed)
+                Log.d(tag, "Upstream DNS (IP): $trimmed")
+                return
+            } catch (_: Exception) {}
+        }
         Thread {
             try {
-                currentUpstreamAddress = InetAddress.getByName(hostOrIp)
-                Log.d(tag, "Upstream DNS: $hostOrIp -> ${currentUpstreamAddress?.hostAddress}")
+                val addrs = com.gemini.dnsswitcher.service.proxy.ProxyDetector.resolveAddresses(trimmed, vpnService)
+                if (addrs.isNotEmpty()) {
+                    currentUpstreamAddress = addrs.first()
+                    Log.d(tag, "Upstream DNS: $trimmed -> ${currentUpstreamAddress?.hostAddress}")
+                }
             } catch (e: Exception) {
-                Log.e(tag, "Ошибка разрешения upstream DNS $hostOrIp: ${e.message}")
+                Log.e(tag, "Ошибка разрешения upstream DNS $trimmed: ${e.message}")
             }
         }.start()
     }

@@ -5,9 +5,8 @@ import androidx.lifecycle.AndroidViewModel
 import com.gemini.dnsswitcher.data.model.DnsServer
 import com.gemini.dnsswitcher.data.repository.DnsRepository
 import com.gemini.dnsswitcher.service.DnsVpnService
-import com.gemini.dnsswitcher.service.proxy.ProxyConfig
+import com.gemini.dnsswitcher.service.proxy.ProxyCheckResult
 import com.gemini.dnsswitcher.service.proxy.ProxyDetector
-import com.gemini.dnsswitcher.service.proxy.ProxyType
 import kotlinx.coroutines.flow.StateFlow
 
 class MainViewModel(application: Application) : AndroidViewModel(application) {
@@ -19,21 +18,29 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     val proxyString: StateFlow<String> = repository.proxyString
 
     fun setAppMode(mode: String) {
-        repository.setAppMode(mode)
+        if (repository.appMode.value != mode) {
+            repository.setAppMode(mode)
+            DnsVpnService.reloadIfRunning(getApplication())
+        }
     }
 
     fun setProxyString(str: String) {
-        repository.setProxyString(str)
+        val trimmed = str.trim()
+        if (repository.proxyString.value != trimmed) {
+            repository.setProxyString(trimmed)
+            if (repository.appMode.value == "PROXY") {
+                DnsVpnService.reloadIfRunning(getApplication())
+            }
+        }
     }
 
-    suspend fun testProxy(): Long? {
-        val config = repository.getProxyConfig() ?: return null
-        return ProxyDetector.testConnection(config)
-    }
-
-    suspend fun detectProxyType(): ProxyType {
-        val config = repository.getProxyConfig() ?: return ProxyType.AUTO
-        return ProxyDetector.detectType(config)
+    suspend fun diagnoseProxy(): ProxyCheckResult {
+        val config = repository.getProxyConfig()
+            ?: return ProxyCheckResult(
+                success = false,
+                errorMessage = "Неверный формат прокси. Используйте: логин:пароль@адрес:порт"
+            )
+        return ProxyDetector.diagnoseProxy(config, DnsVpnService.activeInstance)
     }
 
     fun selectDns(id: String) {

@@ -25,6 +25,8 @@ import com.gemini.dnsswitcher.data.model.DnsServer
 import com.gemini.dnsswitcher.databinding.ActivityMainBinding
 import com.gemini.dnsswitcher.databinding.DialogEditDnsBinding
 import com.gemini.dnsswitcher.service.DnsVpnService
+import com.gemini.dnsswitcher.service.proxy.ProxyConfig
+import com.gemini.dnsswitcher.service.proxy.ProxyType
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
@@ -138,6 +140,10 @@ class MainActivity : AppCompatActivity() {
 
         binding.btnSaveProxy.setOnClickListener {
             val text = binding.etProxyInput.text?.toString().orEmpty().trim()
+            if (text.isNotEmpty() && ProxyConfig.parse(text) == null) {
+                Toast.makeText(this, "Неверный формат прокси", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
             viewModel.setProxyString(text)
             Toast.makeText(this, "Прокси сохранен", Toast.LENGTH_SHORT).show()
         }
@@ -150,19 +156,26 @@ class MainActivity : AppCompatActivity() {
             }
             viewModel.setProxyString(text)
 
+            binding.btnTestProxy.isEnabled = false
             binding.tvProxyTestResult.visibility = View.VISIBLE
-            binding.tvProxyTestResult.text = "Проверка подключения..."
+            binding.tvProxyTestResult.text = "Проверка подключения и авторизации..."
             binding.tvProxyTestResult.setTextColor(ContextCompat.getColor(this, R.color.text_secondary))
 
             lifecycleScope.launch {
-                val ping = viewModel.testProxy()
-                if (ping != null) {
-                    val detected = viewModel.detectProxyType()
-                    binding.tvProxyTestResult.text = "✓ Подключено! Пинг: ${ping}мс (Протокол: $detected)"
+                val res = viewModel.diagnoseProxy()
+                binding.btnTestProxy.isEnabled = true
+
+                if (res.success) {
+                    val ipPart = if (res.resolvedIp != null) " (${res.resolvedIp})" else ""
+                    binding.tvProxyTestResult.text =
+                        "✓ Подключено! Пинг: ${res.pingMs}мс • ${res.detectedType}$ipPart • Авторизация ОК"
                     binding.tvProxyTestResult.setTextColor(ContextCompat.getColor(this@MainActivity, R.color.status_green))
-                    binding.tvProxyDetectedType.text = "Протокол: $detected (Определен автоматически)"
+                    binding.tvProxyDetectedType.text = "Протокол: ${res.detectedType} (Определен автоматически)"
                 } else {
-                    binding.tvProxyTestResult.text = "✗ Ошибка: сервер не отвечает или неверный логин/пароль"
+                    if (res.detectedType != ProxyType.AUTO) {
+                        binding.tvProxyDetectedType.text = "Протокол: ${res.detectedType} (Определен автоматически)"
+                    }
+                    binding.tvProxyTestResult.text = "✗ ${res.errorMessage ?: "Сервер не отвечает"}"
                     binding.tvProxyTestResult.setTextColor(ContextCompat.getColor(this@MainActivity, R.color.status_red))
                 }
             }
@@ -172,10 +185,21 @@ class MainActivity : AppCompatActivity() {
             val isChecked = binding.switchVpn.isChecked
             val isRunning = DnsVpnService.isServiceRunning.value
             if (isChecked && !isRunning) {
-                if (viewModel.appMode.value == "PROXY" && viewModel.proxyString.value.isEmpty()) {
-                    Toast.makeText(this, "Введите прокси перед включением", Toast.LENGTH_SHORT).show()
-                    binding.switchVpn.isChecked = false
-                    return@setOnClickListener
+                if (viewModel.appMode.value == "PROXY") {
+                    val currentInput = binding.etProxyInput.text?.toString().orEmpty().trim()
+                    if (currentInput.isNotEmpty()) {
+                        if (ProxyConfig.parse(currentInput) == null) {
+                            Toast.makeText(this, "Неверный формат прокси", Toast.LENGTH_SHORT).show()
+                            binding.switchVpn.isChecked = false
+                            return@setOnClickListener
+                        }
+                        viewModel.setProxyString(currentInput)
+                    }
+                    if (viewModel.proxyString.value.isEmpty()) {
+                        Toast.makeText(this, "Введите прокси перед включением", Toast.LENGTH_SHORT).show()
+                        binding.switchVpn.isChecked = false
+                        return@setOnClickListener
+                    }
                 }
                 checkAndStartVpn()
             } else if (!isChecked && isRunning) {

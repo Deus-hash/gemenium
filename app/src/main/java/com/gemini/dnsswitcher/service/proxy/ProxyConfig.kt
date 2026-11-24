@@ -24,10 +24,10 @@ data class ProxyConfig(
          * - socks5://логин:пароль@хост:порт
          * - http://логин:пароль@хост:порт
          * - хост:порт
-         * - логин:пароль@хост (порт по умолчанию 1080)
+         * - логин:пароль@хост (порт по умолчанию 1080/8080)
          */
         fun parse(input: String): ProxyConfig? {
-            val trimmed = input.trim()
+            val trimmed = input.trim().replace("\r", "").replace("\n", "")
             if (trimmed.isEmpty()) return null
 
             var type = ProxyType.AUTO
@@ -51,7 +51,7 @@ data class ProxyConfig(
             var password: String? = null
             val atIndex = workStr.lastIndexOf('@')
 
-            val hostPortStr: String
+            var hostPortStr: String
             if (atIndex != -1) {
                 val authPart = workStr.substring(0, atIndex)
                 hostPortStr = workStr.substring(atIndex + 1)
@@ -67,20 +67,40 @@ data class ProxyConfig(
                 hostPortStr = workStr
             }
 
-            val colonHostIndex = hostPortStr.lastIndexOf(':')
+            // Убираем возможный завершающий слэш (например, http://host:port/)
+            hostPortStr = hostPortStr.trim().trimEnd('/')
+
             val host: String
             val port: Int
 
-            if (colonHostIndex != -1) {
-                host = hostPortStr.substring(0, colonHostIndex).trim()
-                val portStr = hostPortStr.substring(colonHostIndex + 1).trim()
-                port = portStr.toIntOrNull() ?: if (type == ProxyType.HTTP) 8080 else 1080
+            if (hostPortStr.startsWith("[")) {
+                // IPv6 в скобках: [2001:db8::1]:1080
+                val closeBracket = hostPortStr.indexOf(']')
+                if (closeBracket != -1) {
+                    host = hostPortStr.substring(1, closeBracket).trim()
+                    val rest = hostPortStr.substring(closeBracket + 1).trim()
+                    port = if (rest.startsWith(":")) {
+                        rest.substring(1).toIntOrNull() ?: defaultPort(type)
+                    } else {
+                        defaultPort(type)
+                    }
+                } else {
+                    host = hostPortStr
+                    port = defaultPort(type)
+                }
             } else {
-                host = hostPortStr.trim()
-                port = if (type == ProxyType.HTTP) 8080 else 1080
+                val colonHostIndex = hostPortStr.lastIndexOf(':')
+                if (colonHostIndex != -1) {
+                    host = hostPortStr.substring(0, colonHostIndex).trim()
+                    val portStr = hostPortStr.substring(colonHostIndex + 1).trim()
+                    port = portStr.toIntOrNull() ?: defaultPort(type)
+                } else {
+                    host = hostPortStr
+                    port = defaultPort(type)
+                }
             }
 
-            if (host.isEmpty()) return null
+            if (host.isEmpty() || port !in 1..65535) return null
 
             return ProxyConfig(
                 rawString = trimmed,
@@ -90,6 +110,10 @@ data class ProxyConfig(
                 password = password,
                 type = type
             )
+        }
+
+        private fun defaultPort(type: ProxyType): Int {
+            return if (type == ProxyType.HTTP) 8080 else 1080
         }
     }
 }
